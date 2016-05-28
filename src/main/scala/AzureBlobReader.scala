@@ -5,7 +5,7 @@ import com.microsoft.azure.storage.blob.{CloudBlob}
 /**
   * Created by dpro on 28/05/16.
   */
-object AzureBlobReader {
+object AzureBlobLog {
 
   val storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=bgtlog;AccountKey=xxxxxx"
   val continer = "bgtlog"ds
