@@ -7,8 +7,8 @@ import com.microsoft.azure.storage.blob.{CloudBlob}
   */
 object AzureBlobReader {
 
-  val storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=bgtlog;AccountKey=TughY1KHJ+NmAYbo+Zeqonb4sBWO29+38zGcz9h4cRkMGOwpCoO+NQAetOtsv8X8lCLQMWVAYF7J+Wh3F1T8eg=="
-  val continer = "bgtlog"
+  val storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=bgtlog;AccountKey=xxxxxx"
+  val continer = "bgtlog"ds
   val storageAccount = CloudStorageAccount.parse(storageConnectionString);
   val blobClient = storageAccount.createCloudBlobClient();
   val container = blobClient.getContainerReference("bgtlog");
