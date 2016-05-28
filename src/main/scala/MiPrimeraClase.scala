@@ -14,7 +14,7 @@ class MiPrimeraClase(name: String) {
 object MiPrimeraClase {
 
     def main(args: Array[String]): Unit = {
-        println("it's running!")
+        println("it's running HHHHH!")
     }
 
 }
