@@ -14,19 +14,17 @@ class AzureBlobLog(key : String) {
   def blobClient   = storageAccount.createCloudBlobClient();
   def container = blobClient.getContainerReference("bgtlog")
 
-  def DirLogs() : List[String] = {
-    println("DirLog : Iniciado")
-    val v = container.listBlobs("data/",true).iterator()
-    println("DirLog : continer")
-    val list : List[String] = List()
 
-    var i = 0;
+  def DirLogs() : List[String] = {
+
+    val v = container.listBlobs("data/",true).iterator()
+
+    var list : List[String] = List()
+
     while(v.hasNext){
       val item = v.next();
-      if(item.isInstanceOf[CloudBlob]) {
-        println(item.asInstanceOf[CloudBlob].getName())
-        list ::: List(item.asInstanceOf[CloudBlob].getName())
-      }
+      if(item.isInstanceOf[CloudBlob])
+        list = list :+ item.asInstanceOf[CloudBlob].getName()
     }
 
     return list;
@@ -34,20 +32,26 @@ class AzureBlobLog(key : String) {
   }
 
   def DirLogs(contiene : String) :List[String] = {
-    val v = container.listBlobs("data/",true).iterator()
-    val list : List[String] = List()
 
-    while(v.hasNext){
-      val item = v.next();      if(item.isInstanceOf[CloudBlob]) {
-        list ::: List(item.asInstanceOf[CloudBlob].getName())
+    val v = container.listBlobs("data/" + contiene).iterator()
+
+    var list : List[String] = List()
+
+    while(v.hasNext) {
+      val item = v.next();
+
+      if(item.isInstanceOf[CloudBlob]) {
+        list = list :+ item.asInstanceOf[CloudBlob].getName()
       }
     }
-    return list.filter( p => p.contains(contiene));
+
+    return list
+
   }
 
   def DirLogs(dateIni : Date, dateFin : Date ) : List[String] = {
     val v = container.listBlobs("data/",true).iterator()
-    val list : List[String] = List()
+    var list : List[String] = List()
 
     while(v.hasNext){
       val item = v.next();
@@ -56,7 +60,7 @@ class AzureBlobLog(key : String) {
         var cloudBlob = item.asInstanceOf[CloudBlob]
         var date : Date = cloudBlob.getProperties.getLastModified
         if(date.compareTo( dateIni ) >= 0 && date.compareTo( dateFin) <= 0) {
-          list ::: List(item.asInstanceOf[CloudBlob].getName())
+          list = list :+ item.asInstanceOf[CloudBlob].getName()
         }
       }
     }
@@ -90,7 +94,7 @@ class AzureBlobLog(key : String) {
   def SaveLog(name : String, file : String) : Unit = {
     val v = container.listBlobs("data/" + name,true).iterator()
     val item = v.next()
-    if(item != Nil && item.isInstanceOf[CloudBlob]) {
+    if( item.isInstanceOf[CloudBlob]) {
       val cloudBlob = item.asInstanceOf[CloudBlob]
       cloudBlob.downloadToFile(file)
     }
