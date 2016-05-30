@@ -2,27 +2,33 @@ import java.util.Date
 
 import com.microsoft.azure.storage.CloudStorageAccount
 import com.microsoft.azure.storage.blob.CloudBlob
+import com.microsoft.azure.storage.blob.CloudBlobContainer
 
 /**
   * Created by dpro on 28/05/16.
   */
-object AzureBlobLog {
-  val storageConnectionString = "DefaultEndpointsProtocol=https;AccountName=bgtlog;AccountKey=xxxxxxxxxxxxxxxxxxxxxxxxxxx"
-  val continer = "bgtlog"
-  val storageAccount = CloudStorageAccount.parse(storageConnectionString);
-  val blobClient = storageAccount.createCloudBlobClient();
-  val container = blobClient.getContainerReference("bgtlog");
+class AzureBlobLog(key : String) {
+
+  def storageConnectionString : String  =  "DefaultEndpointsProtocol=https;AccountName=bgtlog;AccountKey="  + key;
+  def storageAccount  = CloudStorageAccount.parse(storageConnectionString);
+  def blobClient   = storageAccount.createCloudBlobClient();
+  def container = blobClient.getContainerReference("bgtlog")
 
   def DirLogs() : List[String] = {
+    println("DirLog : Iniciado")
     val v = container.listBlobs("data/",true).iterator()
+    println("DirLog : continer")
     val list : List[String] = List()
 
+    var i = 0;
     while(v.hasNext){
       val item = v.next();
       if(item.isInstanceOf[CloudBlob]) {
-        list ::: item.asInstanceOf[CloudBlob].getName()
+        println(item.asInstanceOf[CloudBlob].getName())
+        list ::: List(item.asInstanceOf[CloudBlob].getName())
       }
     }
+
     return list;
 
   }
@@ -33,7 +39,7 @@ object AzureBlobLog {
 
     while(v.hasNext){
       val item = v.next();      if(item.isInstanceOf[CloudBlob]) {
-        list ::: item.asInstanceOf[CloudBlob].getName()
+        list ::: List(item.asInstanceOf[CloudBlob].getName())
       }
     }
     return list.filter( p => p.contains(contiene));
@@ -61,7 +67,7 @@ object AzureBlobLog {
   def ReadLog(name : String) : String = {
     val v = container.listBlobs("data/" + name,true).iterator()
     val item = v.next()
-    if(item != Nil && item.isInstanceOf[CloudBlob]){
+    if(item.isInstanceOf[CloudBlob]){
       val cloudBlob = item.asInstanceOf[CloudBlob]
       var n = cloudBlob.getStreamMinimumReadSizeInBytes
       var buffer  = new Array[Byte](n)
