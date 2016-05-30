@@ -1,17 +1,22 @@
-import java.io.{StringWriter, _}
+package com.example
 
 import au.com.bytecode.opencsv.CSVWriter
+import org.apache.hadoop.fs.FileUtil
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
+import java.io._
 
+import java.io.StringWriter
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 
 object Codere1
 {
     val conf = new SparkConf().setAppName("Codere1").setMaster("local[2]")
     val sc = new SparkContext(conf)
-    //Función main prncipal////////////////////////////////////////////////////////////////
+
+    //Función main prncipal/////////////////////////////////////////////////////////////////
     def main(args: Array[String])
     {
         /*Leemos los ficheros del directorio*/
@@ -28,10 +33,6 @@ object Codere1
             }
         }
 
-
-
-
-        //////////////////////////////////////////////////////////////////////////
         val rutafichero = "/home/spark/Escritorio/mbit/codere/Logs";
         val files = getListOfFiles(rutafichero);
 
@@ -50,10 +51,11 @@ object Codere1
                     println(nombrefichero)
                     println ("tipo fichero : "+tipofichero);
                     println ("Sala : "+salaterminalca(0));
-                    println ("terminal: "+salaterminalca(2));
-                    println ("CA: "+salaterminalca(1));
-                    println ("población: "+salaterminalca(4));
-                    println ("TIPO: "+salaterminalca(3));
+                    println ("terminal: "+salaterminalca(1));
+                    println ("Tipo de sala: "+salaterminalca(2));
+                    println ("población: "+salaterminalca(3));
+                    println ("CA: "+salaterminalca(4));
+                    println ("TIPO: "+salaterminalca(5));
 
                     var rutaficherocompleta = rutafichero + "/" + nombrefichero;
                 //COC 27-05-2016 comentamos para el cambio detectado por ADO sobre los tipos de nombre de fichero
@@ -66,11 +68,11 @@ object Codere1
     }
     //Bloque de funciones auxiliares/////////////////////////////////////////////////////////
     /*
-COC 3-5-2016
-En esta función sacamos del tipo del fichero los siguientes datos:
-COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
+    COC 3-5-2016
+    En esta función sacamos del tipo del fichero los siguientes datos:
+    COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
 
-* */
+    * */
     def tipoFichero(nombrefichero: String):(String) =
     {
         var inicio = nombrefichero.indexOf("#") + 1
@@ -80,113 +82,109 @@ COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
     }
 
     /*
-    COC 3-5-2016
+    COC 6-5-2016
+    V2 COC 30-05-2016 cambiamos el parseo por nuevos casos introducidos
+    Versión 2 de la función nombreSalaTerminalCA con Split
     En esta función sacamos del titulo del fichero los siguientes datos:
-    Sala
-    Terminal
-    Comunidad Autónoma
-    en el Array completamos los datos en ese orden de la posición 0 a la 2.
+    Sala : 0
+    terminal: 1
+    tiposala: 2
+    poblacion: 3
+    CA: 4
+    TIPOterminal: 5
+    en el Array completamos los datos en ese orden de la posición 0 a la 5.
     * */
-    def nombreSalaTerminalCA(nombrefichero: String):(Array[String]) =
-    {
-        var salaterminalca = new Array[String](3);
-        var fin = nombrefichero.indexOf(".");
-        var texto = nombrefichero.substring(0, fin);
-
-        var guion = texto.indexOf("-");
-        if(guion == -1)
-        {
-            salaterminalca(0) = texto;
-            salaterminalca(1)= "stts";
-
-        }
-        else
-        {
-            salaterminalca(0) = texto.substring(0,texto.indexOf("-"));
-            salaterminalca(1)= texto.substring(texto.indexOf("-")+1, texto.length);
-            salaterminalca(1) = salaterminalca(1).substring(0, salaterminalca(1).indexOf("-"));
-        }
-        salaterminalca(2) = nombrefichero.substring(fin + 1, nombrefichero.length());
-        salaterminalca(2) = salaterminalca(2).substring(0, salaterminalca(2).indexOf("."));
-
-
-        return salaterminalca;
-    }
-
-    /*
-   COC 6-5-2016
-   Versión 2 de la función nombreSalaTerminalCA con Split
-   En esta función sacamos del titulo del fichero los siguientes datos:
-   Sala : 0
-   terminal: 2
-   CA: 1
-   TIPO: 3
-   POBLACION: 4 Metemos este campo más tras el análisis ADO 27-05-2016
-   en el Array completamos los datos en ese orden de la posición 0 a la 3.
-   * */
     def nombreSalaTerminalCA2(nombrefichero: String):(Array[String]) =
     {
-        var salaterminalca = new Array[String](5);
-        var nombreprimeraparte = nombrefichero.split('.')(0)
-        println("primera parte del nombre = " +nombreprimeraparte)
-        println("tamaño " + nombreprimeraparte.split('-').length)
-        if(nombreprimeraparte.indexOf('-') > 0)
+        var salaterminalca = new Array[String](6);
+        var primeraparte = nombrefichero.split('.')(0)
+        var segundaparte = nombrefichero.substring(nombrefichero.indexOf(".")+1,nombrefichero.length);
+        println("NOMBRE DEL FICHERO: "+nombrefichero);
+        println("primera parte del nombre = " +primeraparte)
+        println("segunda parte del nombre = " +segundaparte)
+       //Parseamos la primera parte del nombre
+       //Miramos si contiene guión puede tener varias partes
+        if(primeraparte.indexOf('-') > 0)
         {
-            var nombresegundaparte ="";
-            if(nombreprimeraparte.indexOf("sst")>0)
-            {
-                salaterminalca(3) = "sst"
-                salaterminalca(0) = nombreprimeraparte.substring(0,nombreprimeraparte.indexOf("sst")-1)
-                nombresegundaparte = nombreprimeraparte.substring(nombreprimeraparte.indexOf("sst"), nombreprimeraparte.length)
-            }
-            else if(nombreprimeraparte.indexOf("till")>0)
-            {
-                salaterminalca(3) = "till"
-                salaterminalca(0) = nombreprimeraparte.substring(0,nombreprimeraparte.indexOf("till")-1)
-                nombresegundaparte = nombreprimeraparte.substring(nombreprimeraparte.indexOf("till"), nombreprimeraparte.length)
-            }
-            //COC 27-05-2016 vamos a ver si hay más de 4 partes en el split('-')
-            if(nombreprimeraparte.split('-').length == 4)
-            {
-                println("Estamos en = 4")
-                //salaterminalca(0) = nombrefichero.split('.')(0).split('-')(0);
-                salaterminalca(2) = nombrefichero.split('.')(0).split('-')(1);
-                salaterminalca(4) = nombrefichero.split('.')(0).split('-')(3);
-            }
-            else if(nombreprimeraparte.split('-').length > 4)
-            {
-                println("Estamos en > 4")
-                //variable para ver la segunda parte del mensaje
-                salaterminalca(2) = nombresegundaparte.split('-')(0)
-                //println ("Estamos procesando salaterminalca(2)" + salaterminalca(2))
-                salaterminalca(4) = nombresegundaparte.substring(nombresegundaparte.lastIndexOf("-")+1,nombresegundaparte.length)
-                //println ("Estamos procesando salaterminalca(4)" + salaterminalca(4))
+            var primeraparte2 = "";
+            if (primeraparte.indexOf("sst") > 0 || primeraparte.indexOf("till") > 0) {
+                if (primeraparte.indexOf("sst") > 0) {
+                    salaterminalca(5) = "sst" //TIPO DE TERMINAL
+                    salaterminalca(0) = primeraparte.substring(0, primeraparte.indexOf("sst") - 1) //Sala
+                    //Comprobamos cuantos - tiene a la derecha de sst
+                    primeraparte2 = primeraparte.substring(primeraparte.indexOf("sst"), primeraparte.length) //Recogemos la parte a la derecha de sst (incluido)
+                }
+                else {
+                    salaterminalca(5) = "till" //TIPO DE TERMINAL
+                    salaterminalca(0) = primeraparte.substring(0, primeraparte.indexOf("till") - 1) //Sala
+                    //Comprobamos cuantos - tiene a la derecha de till
+                    primeraparte2 = primeraparte.substring(primeraparte.indexOf("till"), primeraparte.length) //Recogemos la parte a la derecha de sst (incluido)
+                }
 
-            }
-            else if (nombreprimeraparte.split('-').length < 4)
-            {
-               if(nombrefichero.split('.')(0).split('-')(1).indexOf("sst") > 0 || nombrefichero.split('.')(0).split('-')(1).indexOf("till") > 0 )
-               {
-                   salaterminalca(2) = nombrefichero.split('.')(0).split('-')(1);
-               }
-               else
-               {
-                   salaterminalca(2) = nombrefichero.split('.')(0).split('-')(2);
-               }
+                //Solo tiene el terminal
+                if (primeraparte2.indexOf("-") < 0) {
+                    salaterminalca(1) = primeraparte2;
+                    salaterminalca(2) = "SIN TIPO DE SALA"
+                    salaterminalca(3) = "SIN POBLACIÓN"
 
-                salaterminalca(4) = "NO INFORMADO"
+                }
+                //Tiene más campos
+                else {
+                    salaterminalca(1) = primeraparte2.substring(0, primeraparte2.indexOf("-") - 1)
+                    var primeraparte3 = primeraparte2.substring(primeraparte2.indexOf("-") + 1, primeraparte2.length)
+                    //miramos a ver cuantos campos tiene tras sst/till
+                    //Solo tiene un campo más
+                    if (primeraparte3.indexOf("-") < 0) {
+                        salaterminalca(2) = primeraparte3
+                        salaterminalca(3) = "SIN POBLACIÓN"
+                    }
+                    //Tiene almenos dos
+                    else {
+                        salaterminalca(2) = primeraparte3.substring(0, primeraparte3.indexOf("-"))
+                        salaterminalca(3) = primeraparte3.substring(primeraparte3.indexOf("-")+1, primeraparte3.length)
+                    }
+                }
+            }
+            //Solo tiene un campo y no detectamos sst ni till
+            else
+            {
+                salaterminalca(0) = primeraparte;
+
+                salaterminalca(1) = "SIN TERMINAL"
+                salaterminalca(2) = "SIN TIPO DE SALA"
+                salaterminalca(3) = "SIN POBLACION"
             }
         }
+        //Solamente tiene un campo y se lo asignamos al nombre de sala
         else
         {
-            salaterminalca(0) = nombrefichero.split('.')(0);
-            salaterminalca(2) = nombrefichero.split('.')(2);
-            salaterminalca(3) = "SIN TIPO"
+           salaterminalca(0) = primeraparte;
+
+            salaterminalca(1) = "SIN TERMINAL"
+            salaterminalca(2) = "SIN TIPO DE SALA"
+            salaterminalca(3) = "SIN POBLACION"
+        }
+        //Parseamos la segunda parte ojo el tipo de terminal ya lo hemos completado según sst o till
+       if(segundaparte.indexOf(".") > 0) // tiene informado más de un campo
+        {
+            salaterminalca(4) = segundaparte.substring(0,segundaparte.indexOf("."))
+        }
+        else //Tiene almenos dos tomamos el primero como CA
+        {
+            salaterminalca(4) = segundaparte
+        }
+        if (segundaparte.indexOf("sst") > 0 )
+        {
+            salaterminalca(5) = "sst"
+        }
+        else if(segundaparte.indexOf("till") > 0)
+        {
+            salaterminalca(5) = "till"
         }
 
-        salaterminalca(1) = nombrefichero.split('.')(1);
 
         return salaterminalca;
+
     }
 
     /*
@@ -234,8 +232,6 @@ COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
         //COC 07-05-2016 llamo a las tres funciones para segmentar el fichero
         val rddcompleto =completarRdd(rddlineas)
         val rddlimpio =limpiarRdd(rddlineas)
-
-
 
         val rrdParseado=parsearRdd(rddlimpio,salaterminalca)
 
@@ -315,32 +311,32 @@ COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
         var mensajetotal = rdd.collect().toString
         println (mensajetotal.toString)
 
-        /*rdd.foreach
+        rdd.foreach
         {
             x => val mensaje = x.toString
-            if(regprimercaracterlinea.findFirstIn(mensaje).isEmpty)//Caso de linea erronea
-            {
-                if (mensajetotal.length == 0)
+                if(regprimercaracterlinea.findFirstIn(mensaje).isEmpty)//Caso de linea erronea
                 {
-                    mensajetotal = mensaje + "Ñ"
+                    if (mensajetotal.length == 0)
+                    {
+                        mensajetotal = mensaje + "Ñ"
 
+                    }
+                    else
+                    {
+
+                        mensajetotal = mensajetotal + " " + mensaje + "Ñ"
+
+                    }
                 }
                 else
                 {
-
-                    mensajetotal = mensajetotal + " " + mensaje+ "Ñ"
-
+                    mensajetotal = mensajetotal + mensaje + "Ñ"
                 }
-            }
-            else
-            {
-                mensajetotal = mensajetotal + mensaje + "Ñ"
-            }
                 mensajetotal = mensajetotal + mensaje + "Ñ"
                 println ("tamaño de mensajetotal " + mensajetotal.length)
                 println ("mensaje total = " + mensajetotal)
 
-        }*/
+        }
 
 
         /*
