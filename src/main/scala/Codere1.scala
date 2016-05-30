@@ -1,17 +1,22 @@
-import java.io.{StringWriter, _}
+package com.example
 
 import au.com.bytecode.opencsv.CSVWriter
+import org.apache.hadoop.fs.FileUtil
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
+import java.io._
 
+import java.io.StringWriter
 import scala.collection.JavaConversions._
+import scala.collection.JavaConverters._
 
 
 object Codere1
 {
     val conf = new SparkConf().setAppName("Codere1").setMaster("local[2]")
     val sc = new SparkContext(conf)
-    //Función main prncipal////////////////////////////////////////////////////////////////
+
+    //Función main prncipal/////////////////////////////////////////////////////////////////
     def main(args: Array[String])
     {
         /*Leemos los ficheros del directorio*/
@@ -28,10 +33,6 @@ object Codere1
             }
         }
 
-
-
-
-        //////////////////////////////////////////////////////////////////////////
         val rutafichero = "/home/spark/Escritorio/mbit/codere/Logs";
         val files = getListOfFiles(rutafichero);
 
@@ -66,11 +67,11 @@ object Codere1
     }
     //Bloque de funciones auxiliares/////////////////////////////////////////////////////////
     /*
-COC 3-5-2016
-En esta función sacamos del tipo del fichero los siguientes datos:
-COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
+    COC 3-5-2016
+    En esta función sacamos del tipo del fichero los siguientes datos:
+    COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
 
-* */
+    * */
     def tipoFichero(nombrefichero: String):(String) =
     {
         var inicio = nombrefichero.indexOf("#") + 1
@@ -80,50 +81,16 @@ COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
     }
 
     /*
-    COC 3-5-2016
+    COC 6-5-2016
+    Versión 2 de la función nombreSalaTerminalCA con Split
     En esta función sacamos del titulo del fichero los siguientes datos:
-    Sala
-    Terminal
-    Comunidad Autónoma
-    en el Array completamos los datos en ese orden de la posición 0 a la 2.
+    Sala : 0
+    terminal: 2
+    CA: 1
+    TIPO: 3
+    POBLACION: 4 Metemos este campo más tras el análisis ADO 27-05-2016
+    en el Array completamos los datos en ese orden de la posición 0 a la 3.
     * */
-    def nombreSalaTerminalCA(nombrefichero: String):(Array[String]) =
-    {
-        var salaterminalca = new Array[String](3);
-        var fin = nombrefichero.indexOf(".");
-        var texto = nombrefichero.substring(0, fin);
-
-        var guion = texto.indexOf("-");
-        if(guion == -1)
-        {
-            salaterminalca(0) = texto;
-            salaterminalca(1)= "stts";
-
-        }
-        else
-        {
-            salaterminalca(0) = texto.substring(0,texto.indexOf("-"));
-            salaterminalca(1)= texto.substring(texto.indexOf("-")+1, texto.length);
-            salaterminalca(1) = salaterminalca(1).substring(0, salaterminalca(1).indexOf("-"));
-        }
-        salaterminalca(2) = nombrefichero.substring(fin + 1, nombrefichero.length());
-        salaterminalca(2) = salaterminalca(2).substring(0, salaterminalca(2).indexOf("."));
-
-
-        return salaterminalca;
-    }
-
-    /*
-   COC 6-5-2016
-   Versión 2 de la función nombreSalaTerminalCA con Split
-   En esta función sacamos del titulo del fichero los siguientes datos:
-   Sala : 0
-   terminal: 2
-   CA: 1
-   TIPO: 3
-   POBLACION: 4 Metemos este campo más tras el análisis ADO 27-05-2016
-   en el Array completamos los datos en ese orden de la posición 0 a la 3.
-   * */
     def nombreSalaTerminalCA2(nombrefichero: String):(Array[String]) =
     {
         var salaterminalca = new Array[String](5);
@@ -145,6 +112,18 @@ COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
                 salaterminalca(0) = nombreprimeraparte.substring(0,nombreprimeraparte.indexOf("till")-1)
                 nombresegundaparte = nombreprimeraparte.substring(nombreprimeraparte.indexOf("till"), nombreprimeraparte.length)
             }
+            else if(nombreprimeraparte.indexOf("test")>0)//COC 29-05-2016 sobre este bloque necesitaremos ejemplos para ver la posibilidad
+            {                                            //de trabajar el bloque como los anteriores
+                salaterminalca(3) = "test"
+            }
+            else if(nombreprimeraparte.indexOf("root")>0)
+            {
+                salaterminalca(3) = "root"
+            }
+            else if(nombreprimeraparte.indexOf("unnamed")>0)
+            {
+                salaterminalca(3) = "unnamed"
+            }
             //COC 27-05-2016 vamos a ver si hay más de 4 partes en el split('-')
             if(nombreprimeraparte.split('-').length == 4)
             {
@@ -156,7 +135,7 @@ COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
             else if(nombreprimeraparte.split('-').length > 4)
             {
                 println("Estamos en > 4")
-                //variable para ver la segunda parte del mensaje
+                //variable para ver la segunda parte del     mensaje
                 salaterminalca(2) = nombresegundaparte.split('-')(0)
                 //println ("Estamos procesando salaterminalca(2)" + salaterminalca(2))
                 salaterminalca(4) = nombresegundaparte.substring(nombresegundaparte.lastIndexOf("-")+1,nombresegundaparte.length)
@@ -165,14 +144,14 @@ COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
             }
             else if (nombreprimeraparte.split('-').length < 4)
             {
-               if(nombrefichero.split('.')(0).split('-')(1).indexOf("sst") > 0 || nombrefichero.split('.')(0).split('-')(1).indexOf("till") > 0 )
-               {
-                   salaterminalca(2) = nombrefichero.split('.')(0).split('-')(1);
-               }
-               else
-               {
-                   salaterminalca(2) = nombrefichero.split('.')(0).split('-')(2);
-               }
+                if(nombrefichero.split('.')(0).split('-')(1).indexOf("sst") > 0 || nombrefichero.split('.')(0).split('-')(1).indexOf("till") > 0 )
+                {
+                    salaterminalca(2) = nombrefichero.split('.')(0).split('-')(1);
+                }
+                else
+                {
+                    salaterminalca(2) = nombrefichero.split('.')(0).split('-')(2);
+                }
 
                 salaterminalca(4) = "NO INFORMADO"
             }
@@ -186,7 +165,21 @@ COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
 
         salaterminalca(1) = nombrefichero.split('.')(1);
 
+        ///ZONA DE PROTECCIÓN///
+        /*
+        COC 29-05-2016 recogemos los valores recogidos del proceso de parseo y comprobamos que son adecuados
+        En esta versión se configuran por codigo
+        A DEPURAR: rescatar los valores de una tabla de configuración
+        * */
+        // 1 Controlamos el tipo de terminal
+        if(salaterminalca(3) != "sst" || salaterminalca(3) != "till" || salaterminalca(3) != "test" || salaterminalca(3) != "root" || salaterminalca(3) != "unnamed")
+        {
+            salaterminalca(3) = "OTRO TIPO DE TERMINAL"
+            //COC Depurar podríamos marcar el registro
+        }
+
         return salaterminalca;
+
     }
 
     /*
@@ -234,8 +227,6 @@ COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
         //COC 07-05-2016 llamo a las tres funciones para segmentar el fichero
         val rddcompleto =completarRdd(rddlineas)
         val rddlimpio =limpiarRdd(rddlineas)
-
-
 
         val rrdParseado=parsearRdd(rddlimpio,salaterminalca)
 
@@ -315,32 +306,32 @@ COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
         var mensajetotal = rdd.collect().toString
         println (mensajetotal.toString)
 
-        /*rdd.foreach
+        rdd.foreach
         {
             x => val mensaje = x.toString
-            if(regprimercaracterlinea.findFirstIn(mensaje).isEmpty)//Caso de linea erronea
-            {
-                if (mensajetotal.length == 0)
+                if(regprimercaracterlinea.findFirstIn(mensaje).isEmpty)//Caso de linea erronea
                 {
-                    mensajetotal = mensaje + "Ñ"
+                    if (mensajetotal.length == 0)
+                    {
+                        mensajetotal = mensaje + "Ñ"
 
+                    }
+                    else
+                    {
+
+                        mensajetotal = mensajetotal + " " + mensaje + "Ñ"
+
+                    }
                 }
                 else
                 {
-
-                    mensajetotal = mensajetotal + " " + mensaje+ "Ñ"
-
+                    mensajetotal = mensajetotal + mensaje + "Ñ"
                 }
-            }
-            else
-            {
-                mensajetotal = mensajetotal + mensaje + "Ñ"
-            }
                 mensajetotal = mensajetotal + mensaje + "Ñ"
                 println ("tamaño de mensajetotal " + mensajetotal.length)
                 println ("mensaje total = " + mensajetotal)
 
-        }*/
+        }
 
 
         /*
