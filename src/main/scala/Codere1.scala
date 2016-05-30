@@ -51,10 +51,11 @@ object Codere1
                     println(nombrefichero)
                     println ("tipo fichero : "+tipofichero);
                     println ("Sala : "+salaterminalca(0));
-                    println ("terminal: "+salaterminalca(2));
-                    println ("CA: "+salaterminalca(1));
-                    println ("población: "+salaterminalca(4));
-                    println ("TIPO: "+salaterminalca(3));
+                    println ("terminal: "+salaterminalca(1));
+                    println ("Tipo de sala: "+salaterminalca(2));
+                    println ("población: "+salaterminalca(3));
+                    println ("CA: "+salaterminalca(4));
+                    println ("TIPO: "+salaterminalca(5));
 
                     var rutaficherocompleta = rutafichero + "/" + nombrefichero;
                 //COC 27-05-2016 comentamos para el cambio detectado por ADO sobre los tipos de nombre de fichero
@@ -82,101 +83,105 @@ object Codere1
 
     /*
     COC 6-5-2016
+    V2 COC 30-05-2016 cambiamos el parseo por nuevos casos introducidos
     Versión 2 de la función nombreSalaTerminalCA con Split
     En esta función sacamos del titulo del fichero los siguientes datos:
     Sala : 0
-    terminal: 2
-    CA: 1
-    TIPO: 3
-    POBLACION: 4 Metemos este campo más tras el análisis ADO 27-05-2016
-    en el Array completamos los datos en ese orden de la posición 0 a la 3.
+    terminal: 1
+    tiposala: 2
+    poblacion: 3
+    CA: 4
+    TIPOterminal: 5
+    en el Array completamos los datos en ese orden de la posición 0 a la 5.
     * */
     def nombreSalaTerminalCA2(nombrefichero: String):(Array[String]) =
     {
-        var salaterminalca = new Array[String](5);
-        var nombreprimeraparte = nombrefichero.split('.')(0)
-        println("primera parte del nombre = " +nombreprimeraparte)
-        println("tamaño " + nombreprimeraparte.split('-').length)
-        if(nombreprimeraparte.indexOf('-') > 0)
+        var salaterminalca = new Array[String](6);
+        var primeraparte = nombrefichero.split('.')(0)
+        var segundaparte = nombrefichero.substring(nombrefichero.indexOf(".")+1,nombrefichero.length);
+        println("NOMBRE DEL FICHERO: "+nombrefichero);
+        println("primera parte del nombre = " +primeraparte)
+        println("segunda parte del nombre = " +segundaparte)
+       //Parseamos la primera parte del nombre
+       //Miramos si contiene guión puede tener varias partes
+        if(primeraparte.indexOf('-') > 0)
         {
-            var nombresegundaparte ="";
-            if(nombreprimeraparte.indexOf("sst")>0)
-            {
-                salaterminalca(3) = "sst"
-                salaterminalca(0) = nombreprimeraparte.substring(0,nombreprimeraparte.indexOf("sst")-1)
-                nombresegundaparte = nombreprimeraparte.substring(nombreprimeraparte.indexOf("sst"), nombreprimeraparte.length)
-            }
-            else if(nombreprimeraparte.indexOf("till")>0)
-            {
-                salaterminalca(3) = "till"
-                salaterminalca(0) = nombreprimeraparte.substring(0,nombreprimeraparte.indexOf("till")-1)
-                nombresegundaparte = nombreprimeraparte.substring(nombreprimeraparte.indexOf("till"), nombreprimeraparte.length)
-            }
-            else if(nombreprimeraparte.indexOf("test")>0)//COC 29-05-2016 sobre este bloque necesitaremos ejemplos para ver la posibilidad
-            {                                            //de trabajar el bloque como los anteriores
-                salaterminalca(3) = "test"
-            }
-            else if(nombreprimeraparte.indexOf("root")>0)
-            {
-                salaterminalca(3) = "root"
-            }
-            else if(nombreprimeraparte.indexOf("unnamed")>0)
-            {
-                salaterminalca(3) = "unnamed"
-            }
-            //COC 27-05-2016 vamos a ver si hay más de 4 partes en el split('-')
-            if(nombreprimeraparte.split('-').length == 4)
-            {
-                println("Estamos en = 4")
-                //salaterminalca(0) = nombrefichero.split('.')(0).split('-')(0);
-                salaterminalca(2) = nombrefichero.split('.')(0).split('-')(1);
-                salaterminalca(4) = nombrefichero.split('.')(0).split('-')(3);
-            }
-            else if(nombreprimeraparte.split('-').length > 4)
-            {
-                println("Estamos en > 4")
-                //variable para ver la segunda parte del     mensaje
-                salaterminalca(2) = nombresegundaparte.split('-')(0)
-                //println ("Estamos procesando salaterminalca(2)" + salaterminalca(2))
-                salaterminalca(4) = nombresegundaparte.substring(nombresegundaparte.lastIndexOf("-")+1,nombresegundaparte.length)
-                //println ("Estamos procesando salaterminalca(4)" + salaterminalca(4))
-
-            }
-            else if (nombreprimeraparte.split('-').length < 4)
-            {
-                if(nombrefichero.split('.')(0).split('-')(1).indexOf("sst") > 0 || nombrefichero.split('.')(0).split('-')(1).indexOf("till") > 0 )
-                {
-                    salaterminalca(2) = nombrefichero.split('.')(0).split('-')(1);
+            var primeraparte2 = "";
+            if (primeraparte.indexOf("sst") > 0 || primeraparte.indexOf("till") > 0) {
+                if (primeraparte.indexOf("sst") > 0) {
+                    salaterminalca(5) = "sst" //TIPO DE TERMINAL
+                    salaterminalca(0) = primeraparte.substring(0, primeraparte.indexOf("sst") - 1) //Sala
+                    //Comprobamos cuantos - tiene a la derecha de sst
+                    primeraparte2 = primeraparte.substring(primeraparte.indexOf("sst"), primeraparte.length) //Recogemos la parte a la derecha de sst (incluido)
                 }
-                else
-                {
-                    salaterminalca(2) = nombrefichero.split('.')(0).split('-')(2);
+                else {
+                    salaterminalca(5) = "till" //TIPO DE TERMINAL
+                    salaterminalca(0) = primeraparte.substring(0, primeraparte.indexOf("till") - 1) //Sala
+                    //Comprobamos cuantos - tiene a la derecha de till
+                    primeraparte2 = primeraparte.substring(primeraparte.indexOf("till"), primeraparte.length) //Recogemos la parte a la derecha de sst (incluido)
                 }
 
-                salaterminalca(4) = "NO INFORMADO"
+                //Solo tiene el terminal
+                if (primeraparte2.indexOf("-") < 0) {
+                    salaterminalca(1) = primeraparte2;
+                    salaterminalca(2) = "SIN TIPO DE SALA"
+                    salaterminalca(3) = "SIN POBLACIÓN"
+
+                }
+                //Tiene más campos
+                else {
+                    salaterminalca(1) = primeraparte2.substring(0, primeraparte2.indexOf("-") - 1)
+                    var primeraparte3 = primeraparte2.substring(primeraparte2.indexOf("-") + 1, primeraparte2.length)
+                    //miramos a ver cuantos campos tiene tras sst/till
+                    //Solo tiene un campo más
+                    if (primeraparte3.indexOf("-") < 0) {
+                        salaterminalca(2) = primeraparte3
+                        salaterminalca(3) = "SIN POBLACIÓN"
+                    }
+                    //Tiene almenos dos
+                    else {
+                        salaterminalca(2) = primeraparte3.substring(0, primeraparte3.indexOf("-"))
+                        salaterminalca(3) = primeraparte3.substring(primeraparte3.indexOf("-")+1, primeraparte3.length)
+                    }
+                }
+            }
+            //Solo tiene un campo y no detectamos sst ni till
+            else
+            {
+                salaterminalca(0) = primeraparte;
+
+                salaterminalca(1) = "SIN TERMINAL"
+                salaterminalca(2) = "SIN TIPO DE SALA"
+                salaterminalca(3) = "SIN POBLACION"
             }
         }
+        //Solamente tiene un campo y se lo asignamos al nombre de sala
         else
         {
-            salaterminalca(0) = nombrefichero.split('.')(0);
-            salaterminalca(2) = nombrefichero.split('.')(2);
-            salaterminalca(3) = "SIN TIPO"
+           salaterminalca(0) = primeraparte;
+
+            salaterminalca(1) = "SIN TERMINAL"
+            salaterminalca(2) = "SIN TIPO DE SALA"
+            salaterminalca(3) = "SIN POBLACION"
         }
-
-        salaterminalca(1) = nombrefichero.split('.')(1);
-
-        ///ZONA DE PROTECCIÓN///
-        /*
-        COC 29-05-2016 recogemos los valores recogidos del proceso de parseo y comprobamos que son adecuados
-        En esta versión se configuran por codigo
-        A DEPURAR: rescatar los valores de una tabla de configuración
-        * */
-        // 1 Controlamos el tipo de terminal
-        if(salaterminalca(3) != "sst" || salaterminalca(3) != "till" || salaterminalca(3) != "test" || salaterminalca(3) != "root" || salaterminalca(3) != "unnamed")
+        //Parseamos la segunda parte ojo el tipo de terminal ya lo hemos completado según sst o till
+       if(segundaparte.indexOf(".") > 0) // tiene informado más de un campo
         {
-            salaterminalca(3) = "OTRO TIPO DE TERMINAL"
-            //COC Depurar podríamos marcar el registro
+            salaterminalca(4) = segundaparte.substring(0,segundaparte.indexOf("."))
         }
+        else //Tiene almenos dos tomamos el primero como CA
+        {
+            salaterminalca(4) = segundaparte
+        }
+        if (segundaparte.indexOf("sst") > 0 )
+        {
+            salaterminalca(5) = "sst"
+        }
+        else if(segundaparte.indexOf("till") > 0)
+        {
+            salaterminalca(5) = "till"
+        }
+
 
         return salaterminalca;
 
