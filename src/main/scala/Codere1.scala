@@ -130,7 +130,7 @@ object Codere1
                 }
                 //Tiene más campos
                 else {
-                    salaterminalca(1) = primeraparte2.substring(0, primeraparte2.indexOf("-") - 1)
+                    salaterminalca(1) = primeraparte2.substring(0, primeraparte2.indexOf("-"))
                     var primeraparte3 = primeraparte2.substring(primeraparte2.indexOf("-") + 1, primeraparte2.length)
                     //miramos a ver cuantos campos tiene tras sst/till
                     //Solo tiene un campo más
