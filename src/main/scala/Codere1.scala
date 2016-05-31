@@ -140,8 +140,8 @@ object Codere1
                     }
                     //Tiene almenos dos
                     else {
-                        salaterminalca(2) = primeraparte3.substring(0, primeraparte3.indexOf("-"))
-                        salaterminalca(3) = primeraparte3.substring(primeraparte3.indexOf("-")+1, primeraparte3.length)
+                        salaterminalca(2) = primeraparte3.substring(0, primeraparte3.lastIndexOf("-"))
+                        salaterminalca(3) = primeraparte3.substring(primeraparte3.lastIndexOf("-")+1, primeraparte3.length)
                     }
                 }
             }
