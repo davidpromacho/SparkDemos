@@ -9,6 +9,7 @@ import java.io._
 import java.io.StringWriter
 import scala.collection.JavaConversions._
 import scala.collection.JavaConverters._
+import scala.util.matching.Regex
 
 
 object Codere1
@@ -59,8 +60,15 @@ object Codere1
 
                     var rutaficherocompleta = rutafichero + "/" + nombrefichero;
                 //COC 27-05-2016 comentamos para el cambio detectado por ADO sobre los tipos de nombre de fichero
-                // var casostipofichero = casoFichero(tipofichero, rutaficherocompleta,salaterminalca);
-
+                if(salaterminalca(5) == "test" ||  salaterminalca(5) == "root" ||  salaterminalca(5) == "unnamed" ||  salaterminalca(5) == "SIN TIPO DEFINIDO")
+                {
+                    println("FICHERO NO UTILIZADO POR TIPO")
+                    //03-06-2016 COC Depurar grabar este fichero en una ubicación definida
+                }
+                else
+                {
+                    var casostipofichero = casoFichero(tipofichero, rutaficherocompleta,salaterminalca);
+                }
 
             }
         }
@@ -99,9 +107,9 @@ object Codere1
         var salaterminalca = new Array[String](6);
         var primeraparte = nombrefichero.split('.')(0)
         var segundaparte = nombrefichero.substring(nombrefichero.indexOf(".")+1,nombrefichero.length);
-        println("NOMBRE DEL FICHERO: "+nombrefichero);
-        println("primera parte del nombre = " +primeraparte)
-        println("segunda parte del nombre = " +segundaparte)
+       // println("NOMBRE DEL FICHERO: "+nombrefichero);
+        //println("primera parte del nombre = " +primeraparte)
+        //println("segunda parte del nombre = " +segundaparte)
        //Parseamos la primera parte del nombre
        //Miramos si contiene guión puede tener varias partes
         if(primeraparte.indexOf('-') > 0)
@@ -148,6 +156,7 @@ object Codere1
             //Solo tiene un campo y no detectamos sst ni till
             else
             {
+
                 salaterminalca(0) = primeraparte;
 
                 salaterminalca(1) = "SIN TERMINAL"
@@ -181,6 +190,22 @@ object Codere1
         {
             salaterminalca(5) = "till"
         }
+        else if(segundaparte.indexOf("test") > 0)
+        {
+            salaterminalca(5) = "test"
+        }
+        else if(segundaparte.indexOf("root") > 0)
+        {
+            salaterminalca(5) = "root"
+        }
+        else if(segundaparte.indexOf("unnamed") > 0)
+        {
+            salaterminalca(5) = "unnamed"
+        }
+        else
+        {
+            salaterminalca(5) = "SIN TIPO DEFINIDO"
+        }
 
 
         return salaterminalca;
@@ -198,7 +223,6 @@ object Codere1
     LiveLog
     Assetfail
     Sbsfail
-
     * */
     def casoFichero (tipofichero : String, ruta : String, salaterminalca: Array[String]) : String =
     {
@@ -230,18 +254,19 @@ object Codere1
         //COC 07-05-2016 generamos un RDD partiendo del fichero
         val rddlineas = sc.textFile(ruta)
         //COC 07-05-2016 llamo a las tres funciones para segmentar el fichero
-        val rddcompleto =completarRdd(rddlineas)
+        //val rddcompleto =completarRdd(rddlineas)
         val rddlimpio =limpiarRdd(rddlineas)
 
         val rrdParseado=parsearRdd(rddlimpio,salaterminalca)
 
         // guardarCsv(rddcompleto, salaterminalca)
 
-        val rddnavegacion = navegacionRdd(rddlimpio)
-        val rddmonedas = monedasRdd(rddlimpio)
+        //val rddnavegacion = navegacionRdd(rddlimpio)
+        //val rddmonedas = monedasRdd(rddlimpio)
+        val rddmonedas = monedasRdd2(rddlimpio)
 
-        impresion(rddcompleto)
-        //impresion2(rddmonedas)
+        //impresion(rddcompleto)
+        //impresion(rddmonedas)
 
         return resultado;
     }
@@ -319,13 +344,10 @@ object Codere1
                     if (mensajetotal.length == 0)
                     {
                         mensajetotal = mensaje + "Ñ"
-
                     }
                     else
                     {
-
                         mensajetotal = mensajetotal + " " + mensaje + "Ñ"
-
                     }
                 }
                 else
@@ -335,7 +357,6 @@ object Codere1
                 mensajetotal = mensajetotal + mensaje + "Ñ"
                 println ("tamaño de mensajetotal " + mensajetotal.length)
                 println ("mensaje total = " + mensajetotal)
-
         }
 
 
@@ -422,6 +443,35 @@ object Codere1
         val rrdresultado = rrdmonedas.map(x =>(x.split(" - ") (1),1))
 
         return  rrdresultado.reduceByKey((x, y) => x + y)
+    }
+
+    /*
+   COC 03-06-2016
+   versión dos de la función que permita el filtrado por expresiones regulares y
+   almacenamiento en variables los valores del efectivo
+   Función que cuneta el numero de veces que aparece la inserción de un tipo de moneda
+   en un fichero
+   * */
+    def monedasRdd2 (rdd : RDD[String]):RDD[(String)]=
+    {
+        println("ESTAMOS EN monedasRdd2")
+        //var coinstotal = "cash token Coin("
+        //val regex = ".*CASH IN; CashType: [A-Za-z]+, Container: [\\S]+, Status: [A-Za-z]+, Value: [\\d]+".r;
+        //val regex = ".*OnCashInCompleted Status: ([A-Za-z]+) Amount: ([\\d]+) CashType: ([A-Za-z]+) Container: ([\\S]+)".r;
+        val regex = ".* CashDeviceManager> OnCashIn: PH_Hardware.Drivers.CashManager.CashAcceptance, Container: ([\\S]+), Value: ([\\d]+), CashType: ([A-Za-z]+), State: ([A-Za-z]+)".r
+       val rrdresultado = rdd.filter(x => regex.findFirstIn(x).nonEmpty)
+        rrdresultado.foreach
+        {
+            x=>
+                val regex = ".* CashDeviceManager> OnCashIn: PH_Hardware.Drivers.CashManager.CashAcceptance, Container: ([\\S]+), Value: ([\\d]+), CashType: ([A-Za-z]+), State: ([A-Za-z]+)".r
+                val regex(contenedor, importe, tipo, estado) = x
+                println("contenedor " + contenedor)
+                println("importe " + importe)
+                println("tipo " + tipo)
+                println("estado " + estado)
+        }
+        //impresion(rrdresultado)
+        return rdd
     }
 
     /*
