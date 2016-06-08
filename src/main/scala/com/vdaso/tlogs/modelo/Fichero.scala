@@ -1,4 +1,8 @@
+package com.vdaso.tlogs.modelo
 
+import java.io.{File, PrintWriter}
+
+import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 
 import scala.util.matching.Regex
@@ -9,14 +13,14 @@ case class Fichero(path :String, nombre_sala: String, tipoid_terminal: String, t
                    poblacion_sala: String, comunidad_autonoma: String, tipo_terminal: String,
                    nombre_tipo_log: String, fecha: String)
 extends Serializable{
-    override def toString = s"$path;$nombre_sala;$tipoid_terminal;$tipo_sala;$poblacion_sala;$comunidad_autonoma;$tipo_terminal;$nombre_tipo_log;$fecha"
+
+    override def toString = this.productIterator.mkString(";")
 }
 
 
 object Fichero {
 
 //  nombre_sala + "-" + tipoid_terminal + "-" +  tipo_sala + "-" + poblacion_sala + “." + comunidad_autonoma + “.”+  tipo_terminal +  “.codere#" + nombre_tipo_log + "." + fecha + ".1.log"
-
  // val regEx =  "(?:([\\w().-]+-)?(sst\\d|till\\d|sst|till)-)?([\\w]+-)?([\\w.()]+)?#(?:[0-9a-f-]{36})?([\\w]+)\\.?(\\d{4}-\\d{2}-\\d{2})?(\\.1)?\\.log(?:[\\da-f-]{36}|\\.(\\d{4}-\\d{2}-\\d{2}))?(?:[\r\n$])".r
 
   val regEx = new Regex (
@@ -52,31 +56,33 @@ object Fichero {
         )
     }
 
-    def readFromFile(file :String) : List[Fichero] = {
-        val source : String = scala.io.Source.fromFile(file).mkString
-        val m1 = regEx.findAllMatchIn(source)
-        val res = m1.map( Fichero(_) )
-
-        return  res.toList
+    def toCSV(file : String, ficheros : Iterator[Fichero]) ={
+        val wt = new PrintWriter(new File(file ))
+        wt.write(Fichero.getClass.getDeclaredFields.tail.map(_.getName).mkString(";"))
+        for( f <- ficheros) wt.write( f.toString)
+        wt.close()
     }
 
-  /**
-    * Ejemplo de cómo sería el un iterado de expresiones regulares devolviendo
-    * un RDD con los campos encapsulados en objetos.
-    *
-    * @param file
-    * @return
-    */
-  def readFromFileRDD(file :String ) : List[Fichero] = {
+    def apply(text : String) : Fichero = {
+       Fichero(regEx.findFirstMatchIn(text).get)
+    }
 
-      val conf = new SparkConf().setAppName("Codere1").setMaster("local[2]")
-      val sc = new SparkContext(conf)
-      val rdd = sc.textFile(file)
+    def readFromFile(file :String) : Iterator[Fichero] = {
+
+        val source : String = scala.io.Source.fromFile(file).mkString
+        val m = regEx.findAllMatchIn(source)
+         m.map( Fichero(_) )
+
+    }
+
+    def readRDD(rdd : RDD[String] ) : RDD[Fichero] = {
+
       val rdd1 = rdd.flatMap( regEx.findAllMatchIn(_) )
       val rdd2 = rdd1.map( Fichero(_) )
-      return  rdd2.toLocalIterator.toList
-
+      return  rdd2
   }
+
+
 
 }
 
