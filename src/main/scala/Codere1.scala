@@ -46,7 +46,6 @@ object Codere1
                 x => out.println(x);
                     var nombrefichero:String = x.getName();
                     var tipofichero = tipoFichero(nombrefichero);
-
                     var salaterminalca = nombreSalaTerminalCA2(nombrefichero);
 
                     println(nombrefichero)
@@ -79,8 +78,8 @@ object Codere1
     COC 3-5-2016
     En esta función sacamos del tipo del fichero los siguientes datos:
     COC 27-05-2016 cambiamos el algritmo aparecen nombres sin codere solo tomamos #
-
     * */
+
     def tipoFichero(nombrefichero: String):(String) =
     {
         var inicio = nombrefichero.indexOf("#") + 1

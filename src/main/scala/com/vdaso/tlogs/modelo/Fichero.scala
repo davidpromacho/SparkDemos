@@ -13,7 +13,6 @@ case class Fichero(path :String, nombre_sala: String, tipoid_terminal: String, t
                    poblacion_sala: String, comunidad_autonoma: String, tipo_terminal: String,
                    nombre_tipo_log: String, fecha: String)
 extends Serializable{
-
     override def toString = this.productIterator.mkString(";")
 }
 
@@ -81,7 +80,6 @@ object Fichero {
       val rdd2 = rdd1.map( Fichero(_) )
       return  rdd2
   }
-
 
 
 }
