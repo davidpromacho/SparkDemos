@@ -512,6 +512,24 @@ object Codere1
 
 
                 }
+                else if(expreg(1).indexOf("sessionId:")>0)
+                {
+                    println(expreg(1))
+                    val regex = new Regex(expreg(1))
+                    val rrdresultado = rdd.filter(x => regex.findFirstIn(x).nonEmpty)
+                    rrdresultado.foreach
+                    {
+                        x =>
+                            val regex = new Regex(expreg(1))
+                            println("regex2 ="+regex)
+                            val regex(idUser, idSesion) = x
+                            println("idUser " + idUser)
+                            println("idSesion " + idSesion)
+                            
+                    }
+
+
+                }
         }
 
         /*
