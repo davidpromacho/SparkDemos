@@ -519,7 +519,6 @@ object Codere1
                     val rrdresultado = rdd.filter(x => regex.findFirstIn(x).nonEmpty)
                     rrdresultado.foreach
                     {
-
                         x =>
                             val regex = new Regex(expreg(1))
                             println("regex2 ="+regex)
