@@ -525,7 +525,7 @@ object Codere1
                             val regex(idUser, idSesion) = x
                             println("idUser " + idUser)
                             println("idSesion " + idSesion)
-                            
+
                     }
 
 
