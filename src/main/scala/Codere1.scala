@@ -5,6 +5,10 @@ import org.apache.hadoop.fs.FileUtil
 import org.apache.spark.rdd.RDD
 import org.apache.spark.{SparkConf, SparkContext}
 import java.io._
+import spire.std.char
+
+import scala.io.Source
+
 
 import java.io.StringWriter
 import scala.collection.JavaConversions._
@@ -262,7 +266,7 @@ object Codere1
 
         //val rddnavegacion = navegacionRdd(rddlimpio)
         //val rddmonedas = monedasRdd(rddlimpio)
-        val rddmonedas = monedasRdd2(rddlimpio)
+        val rddmonedas = monedasRdd3(rddlimpio)
 
         //impresion(rddcompleto)
         //impresion(rddmonedas)
@@ -457,9 +461,9 @@ object Codere1
         //var coinstotal = "cash token Coin("
         //val regex = ".*CASH IN; CashType: [A-Za-z]+, Container: [\\S]+, Status: [A-Za-z]+, Value: [\\d]+".r;
         //val regex = ".*OnCashInCompleted Status: ([A-Za-z]+) Amount: ([\\d]+) CashType: ([A-Za-z]+) Container: ([\\S]+)".r;
-        val regex = ".* CashDeviceManager> OnCashIn: PH_Hardware.Drivers.CashManager.CashAcceptance, Container: ([\\S]+), Value: ([\\d]+), CashType: ([A-Za-z]+), State: ([A-Za-z]+)".r
+       val regex = ".* CashDeviceManager> OnCashIn: PH_Hardware.Drivers.CashManager.CashAcceptance, Container: ([\\S]+), Value: ([\\d]+), CashType: ([A-Za-z]+), State: ([A-Za-z]+)".r
        val rrdresultado = rdd.filter(x => regex.findFirstIn(x).nonEmpty)
-        rrdresultado.foreach
+       rrdresultado.foreach
         {
             x=>
                 val regex = ".* CashDeviceManager> OnCashIn: PH_Hardware.Drivers.CashManager.CashAcceptance, Container: ([\\S]+), Value: ([\\d]+), CashType: ([A-Za-z]+), State: ([A-Za-z]+)".r
@@ -471,6 +475,69 @@ object Codere1
         }
         //impresion(rrdresultado)
         return rdd
+    }
+/**
+ * COC 9-6-2016 nueva función para leer del fichero y pasar la expresión regular
+ * */
+    def monedasRdd3 (rdd : RDD[String]):RDD[(String)]=
+    {
+        println("ESTAMOS EN monedasRdd3")
+        //var coinstotal = "cash token Coin("
+        //val regex = ".*CASH IN; CashType: [A-Za-z]+, Container: [\\S]+, Status: [A-Za-z]+, Value: [\\d]+".r;
+        //val regex = ".*OnCashInCompleted Status: ([A-Za-z]+) Amount: ([\\d]+) CashType: ([A-Za-z]+) Container: ([\\S]+)".r;
+        var expresionesreg = expRegulares();
+        println("EL ARRAY ES DE = "+expresionesreg.length)
+        expresionesreg.foreach
+        {
+
+            x =>
+                val expreg = x.split(";")
+                //val expreg2 = ".* CashDeviceManager> OnCashIn: PH_Hardware.Drivers.CashManager.CashAcceptance, Container: ([\\S]+), Value: ([\\d]+), CashType: ([A-Za-z]+), State: ([A-Za-z]+)"
+                if(expreg(1).indexOf("Container:")>0)
+                {
+                    println(expreg(1))
+                    val regex = new Regex(expreg(1))
+                    val rrdresultado = rdd.filter(x => regex.findFirstIn(x).nonEmpty)
+                    rrdresultado.foreach
+                    {
+                        x =>
+                            val regex = new Regex(expreg(1))
+                            println("regex2 ="+regex)
+                            val regex(contenedor, importe, tipo, estado) = x
+                            println("contenedor " + contenedor)
+                            println("importe " + importe)
+                            println("tipo " + tipo)
+                            println("estado " + estado)
+                    }
+
+
+                }
+        }
+
+        /*
+        val regex = ".* CashDeviceManager> OnCashIn: PH_Hardware.Drivers.CashManager.CashAcceptance, Container: ([\\S]+), Value: ([\\d]+), CashType: ([A-Za-z]+), State: ([A-Za-z]+)".r
+        val rrdresultado = rdd.filter(x => regex.findFirstIn(x).nonEmpty)
+        rrdresultado.foreach
+        {
+            x=>
+                val regex = ".* CashDeviceManager> OnCashIn: PH_Hardware.Drivers.CashManager.CashAcceptance, Container: ([\\S]+), Value: ([\\d]+), CashType: ([A-Za-z]+), State: ([A-Za-z]+)".r
+                val regex(contenedor, importe, tipo, estado) = x
+                println("contenedor " + contenedor)
+                println("importe " + importe)
+                println("tipo " + tipo)
+                println("estado " + estado)
+        }
+        //impresion(rrdresultado)
+        */
+        return rdd
+    }
+
+    def expRegulares ():Array [String]=
+    {
+        val urlexpreg = "/home/spark/Escritorio/mbit/codere/expreg.csv"
+        val lineas = Source.fromFile(urlexpreg).getLines.toArray
+
+        return lineas;
     }
 
     /*

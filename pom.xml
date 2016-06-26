@@ -19,6 +19,11 @@
             <artifactId>spark-streaming_2.10</artifactId>
             <version>1.5.1</version>
         </dependency>
+        <dependency>
+            <groupId>com.microsoft.azure</groupId>
+            <artifactId>azure-storage</artifactId>
+            <version>4.0.0</version>
+        </dependency>
     </dependencies>
 
     <build>
